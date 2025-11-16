@@ -1,28 +1,39 @@
 <script lang="ts" setup>
-import type { IContactForm } from '@/models/contacts.interface'
-import { InputText, Select, Button, Card, Message } from 'primevue'
-import { ref, watch, type Ref } from 'vue'
-import { Form, FormField, type FormInstance, type FormResolverOptions } from '@primevue/forms'
-import { useContactsStore } from '@/stores/contacts.store'
-import { phoneTypes, getPhoneType } from '@/models/phone.constants'
+import type { IContactForm } from "@/models/contacts.interface";
+import { InputText, Select, Button, Card, Message } from "primevue";
+import { ref, watch, type Ref } from "vue";
+import {
+  Form,
+  FormField,
+  type FormInstance,
+  type FormResolverOptions,
+} from "@primevue/forms";
+import { useContactsStore } from "@/stores/contacts.store";
+import { phoneTypes, getPhoneType } from "@/models/phone.constants";
 
-const props = defineProps<{ contact?: IContactForm }>()
-const isNewContact = ref(false)
-const contactForm: Ref<IContactForm> = ref<IContactForm>({})
+const props = defineProps<{ contact?: IContactForm }>();
+const isNewContact = ref(false);
+const contactForm: Ref<IContactForm> = ref<IContactForm>({});
 
-const contactFormRef: Ref<FormInstance | undefined> = ref()
+const contactFormRef: Ref<FormInstance | undefined> = ref();
 
-const emits = defineEmits(['submit'])
+const emits = defineEmits(["submit"]);
 
-const contactStore = useContactsStore()
+const contactStore = useContactsStore();
 
 function submitForm() {
-  const formFeilds = contactFormRef.value?.states
-  let responseObject: IContactForm = {}
+  const formFeilds = contactFormRef.value?.states;
+  let isValid = true;
+  for (const key in formFeilds) {
+    if (isValid) {
+      isValid = !!formFeilds[key]?.value;
+    }
+  }
+  let responseObject: IContactForm = {};
   if (formFeilds) {
     responseObject = {
       active: isNewContact.value ? true : props.contact?.active,
-      id: isNewContact.value ? '' : props?.contact?.id,
+      id: isNewContact.value ? "" : props?.contact?.id,
       firstName: formFeilds.firstName?.value,
       lastName: formFeilds.lastName?.value,
       email: formFeilds.email?.value,
@@ -36,45 +47,45 @@ function submitForm() {
         type: formFeilds.phoneType?.value,
         phoneNumber: formFeilds.phoneNumber?.value,
       },
-    }
+    };
   }
-  emits('submit', responseObject)
+  emits("submit", responseObject);
 }
 
 const resolver = (resolveData: FormResolverOptions) => {
-  const { values } = resolveData
-  const errors: { [key: string]: { message: string }[] } = {}
+  const { values } = resolveData;
+  const errors: { [key: string]: { message: string }[] } = {};
 
   for (const key in values) {
-    if (values[key] === null || values[key].trim() === '') {
-      errors[key] = [{ message: 'Field is required' }]
+    if (values[key] === null || values[key].trim() === "") {
+      errors[key] = [{ message: "Field is required" }];
     } else {
-      contactFormRef.value!.states[key]!.valid = true
-      contactFormRef.value!.states[key]!.invalid = false
-      contactFormRef.value!.states[key]!.error = null
-      contactFormRef.value!.states[key]!.errors = []
+      contactFormRef.value!.states[key]!.valid = true;
+      contactFormRef.value!.states[key]!.invalid = false;
+      contactFormRef.value!.states[key]!.error = null;
+      contactFormRef.value!.states[key]!.errors = [];
     }
   }
 
   return {
     values,
     errors,
-  }
-}
+  };
+};
 
 watch(
   () => props.contact,
   (newContact) => {
     if (newContact) {
-      isNewContact.value = !newContact.id
-      contactForm.value = newContact
+      isNewContact.value = !newContact.id;
+      contactForm.value = newContact;
     }
   },
   {
     deep: true,
     immediate: true,
-  },
-)
+  }
+);
 </script>
 <template>
   <Card style="form-wrapper">
@@ -86,21 +97,39 @@ watch(
         v-slot="$form"
         @submit="submitForm"
         :validate-on-blur="true"
+        :validate-on-submit="true"
         :resolver
         ref="contactFormRef"
+        :key="Object.keys(contactForm).length"
       >
         <div class="form-row">
-          <FormField v-slot="$field" name="firstName" :initialValue="contactForm.firstName">
+          <FormField
+            v-slot="$field"
+            name="firstName"
+            :initialValue="contactForm.firstName"
+          >
             <InputText type="text" placeholder="First Name" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
-          <FormField v-slot="$field" name="lastName" :initialValue="contactForm.lastName">
+          <FormField
+            v-slot="$field"
+            name="lastName"
+            :initialValue="contactForm.lastName"
+          >
             <InputText type="text" placeholder="Last Name" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
         </div>
         <div class="form-row">
@@ -111,29 +140,45 @@ watch(
             :validate-on-blur="true"
           >
             <InputText type="email" placeholder="Email" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
         </div>
         <div class="form-row">
-          <FormField v-slot="$field" name="phoneType" :initialValue="contactForm?.phone?.type">
+          <FormField
+            v-slot="$field"
+            name="phoneType"
+            :initialValue="contactForm?.phone?.type"
+          >
             <Select :options="phoneTypes" option-value="value">
               <template #value="slotProps">
                 <div>
-                  <i class="pi" :class="getPhoneType(slotProps.value)?.icon"></i>
+                  <i
+                    class="pi"
+                    :class="getPhoneType(slotProps.value)?.icon"
+                  ></i>
                   {{ getPhoneType(slotProps.value)?.label }}
                 </div>
               </template>
               <template #option="slotProps">
                 <div>
-                  <i class="pi" :class="slotProps.option.icon"></i> {{ slotProps.option.label }}
+                  <i class="pi" :class="slotProps.option.icon"></i>
+                  {{ slotProps.option.label }}
                 </div>
               </template>
             </Select>
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
           <FormField
             v-slot="$field"
@@ -141,41 +186,81 @@ watch(
             :initialValue="contactForm?.phone?.phoneNumber"
           >
             <InputText type="tel" placeholder="Phone Number" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
         </div>
         <div class="form-row">
-          <FormField v-slot="$field" name="street" :initialValue="contactForm?.address?.street">
+          <FormField
+            v-slot="$field"
+            name="street"
+            :initialValue="contactForm?.address?.street"
+          >
             <InputText type="text" placeholder="Street Address" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
-          <FormField v-slot="$field" name="city" :initialValue="contactForm?.address?.city">
+          <FormField
+            v-slot="$field"
+            name="city"
+            :initialValue="contactForm?.address?.city"
+          >
             <InputText type="tel" placeholder="City" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
         </div>
         <div class="form-row">
-          <FormField v-slot="$field" name="state" :initialValue="contactForm?.address?.state">
+          <FormField
+            v-slot="$field"
+            name="state"
+            :initialValue="contactForm?.address?.state"
+          >
             <Select name="state" :options="contactStore.states"></Select>
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
-          <FormField v-slot="$field" name="zip" :initialValue="contactForm?.address?.zip">
+          <FormField
+            v-slot="$field"
+            name="zip"
+            :initialValue="contactForm?.address?.zip"
+          >
             <InputText type="text" placeholder="zip" />
-            <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">{{
-              $field.error?.message
-            }}</Message>
+            <Message
+              v-if="$field?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $field.error?.message }}</Message
+            >
           </FormField>
         </div>
         <div class="formRow">
-          <Button type="submit" label="Submit" :disabled="!$form.valid"></Button>
+          <Button
+            type="submit"
+            label="Submit"
+            :disabled="!$form.valid"
+          ></Button>
         </div>
       </Form>
     </template>
