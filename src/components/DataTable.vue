@@ -1,115 +1,118 @@
 <script setup lang="ts">
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import { useContactsStore } from '@/stores/contacts.store'
-import { onBeforeMount, ref, watch, type Ref } from 'vue'
-import type { IContact } from '@/models/contacts.interface'
-import { Button } from 'primevue'
-import { FilterMatchMode } from '@primevue/core/api'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import ToggleSwitch from 'primevue/toggleswitch'
-import { getPhoneType } from '@/models/phone.constants'
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import { useContactsStore } from "@/stores/contacts.store";
+import { onBeforeMount, ref, watch, type Ref } from "vue";
+import type { IContact } from "@/models/contacts.interface";
+import { Button } from "primevue";
+import { FilterMatchMode } from "@primevue/core/api";
+import InputText from "primevue/inputtext";
+import Select from "primevue/select";
+import ToggleSwitch from "primevue/toggleswitch";
+import { getPhoneType } from "@/models/phone.constants";
 
 // declare variables are needed for the component to work
-const sortField = ref('')
-const sortOrder: Ref<number | undefined> = ref(0)
-const contactsStore = useContactsStore()
-const contacts: Ref<IContact[]> = ref([])
-const showInactive = ref(false)
+const sortField = ref("");
+const sortOrder: Ref<number> = ref(0);
+const contactsStore = useContactsStore();
+const contacts: Ref<IContact[]> = ref([]);
+const showInactive = ref(false);
 
+// this is specific to PrimeVue's DataTable to control what filters are used
 const filters = ref({
   lastName: { value: null, matchMode: FilterMatchMode.CONTAINS },
   firstName: { value: null, matchMode: FilterMatchMode.CONTAINS },
   phone: { value: null, matchMode: FilterMatchMode.CONTAINS },
   email: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  'address.state': { value: null, matchMode: FilterMatchMode.EQUALS },
-})
+  "address.state": { value: null, matchMode: FilterMatchMode.EQUALS },
+});
 
 // declare props (inputs) and emits (outputs) of the component
 
-const emits = defineEmits(['delete', 'edit', 'activate', 'add'])
+const emits = defineEmits(["delete", "edit", "activate", "add"]);
 
 // declare functions that the component will use
 function setSortField(event: string) {
-  sortField.value = event
+  sortField.value = event;
 }
 
 function setSortOrder(event: number) {
-  sortOrder.value = event
+  sortOrder.value = event;
 }
 
 function editUser(contact: IContact) {
-  emits('edit', contact)
+  emits("edit", contact);
 }
 
 function removeUser(contact: IContact) {
-  emits('delete', contact)
+  emits("delete", contact);
 }
 
 function activateUser(contact: IContact) {
-  emits('activate', contact)
+  emits("activate", contact);
 }
 
 function addUser() {
-  emits('add')
+  emits("add");
 }
 
 // set up lifecycle hooks and watchers
 onBeforeMount(async () => {
-  await contactsStore.fetchContacts()
-})
+  await contactsStore.fetchContacts();
+});
 
 watch(
   () => contactsStore.contacts,
   (newContacts) => {
     if (newContacts) {
-      contacts.value = newContacts.filter((c) => (showInactive.value ? true : c.active))
+      contacts.value = newContacts.filter((c) =>
+        showInactive.value ? true : c.active
+      );
     }
   },
   {
     deep: true,
-  },
-)
+  }
+);
 
 watch(
   showInactive,
   (newShowInactive) =>
-    (contacts.value = contactsStore.contacts.filter((c) => (newShowInactive ? true : c.active))),
-)
+    (contacts.value = contactsStore.contacts.filter((c) =>
+      newShowInactive ? true : c.active
+    ))
+);
 
 watch([sortField, sortOrder], (values) => {
-  const field = values[0]
-  const order = values[1]
-  const sortedContacts = [...contacts.value]
-  if (field === 'address') {
+  const field = values[0];
+  const order = values[1];
+  const sortedContacts = [...contacts.value];
+  if (field === "address") {
     sortedContacts.sort((a: IContact, b: IContact): number => {
       if (order === 1) {
-        if (a.address.state.toLocaleLowerCase() < b.address.state.toLocaleLowerCase()) {
-          return -1
-        } else {
-          return 1
-        }
+        return a.address.state.toLocaleLowerCase() <
+          b.address.state.toLocaleLowerCase()
+          ? -1
+          : 1;
       } else {
-        if (a.address.state.toLocaleLowerCase() > b.address.state.toLocaleLowerCase()) {
-          return -1
-        } else {
-          return 1
-        }
+        return a.address.state.toLocaleLowerCase() >
+          b.address.state.toLocaleLowerCase()
+          ? -1
+          : 1;
       }
-    })
+    });
   }
-  if (field === 'phone') {
+  if (field === "phone") {
     sortedContacts.sort((a: IContact, b: IContact) => {
       if (order === 1) {
-        return a.phone.phoneNumber < b.phone.phoneNumber ? -1 : 1
+        return a.phone.phoneNumber < b.phone.phoneNumber ? -1 : 1;
       } else {
-        return a.phone.phoneNumber > b.phone.phoneNumber ? -1 : 1
+        return a.phone.phoneNumber > b.phone.phoneNumber ? -1 : 1;
       }
-    })
+    });
   }
-  contacts.value = sortedContacts
-})
+  contacts.value = sortedContacts;
+});
 </script>
 <template>
   <DataTable
@@ -136,11 +139,21 @@ watch([sortField, sortOrder], (values) => {
         </div>
 
         <span>
-          <label for="showInactive">{{ showInactive ? 'Hide' : 'Show' }} inactive contacts</label>
-          <ToggleSwitch v-model="showInactive" name="showInactive"></ToggleSwitch>
+          <label for="showInactive"
+            >{{ showInactive ? "Hide" : "Show" }} inactive contacts</label
+          >
+          <ToggleSwitch
+            v-model="showInactive"
+            name="showInactive"
+          ></ToggleSwitch>
         </span></div
     ></template>
-    <Column field="active" header="Active" v-if="showInactive" style="width: 50px">
+    <Column
+      field="active"
+      header="Active"
+      v-if="showInactive"
+      style="width: 50px"
+    >
       <template #body="slotProps">
         <i
           class="pi"
@@ -214,7 +227,9 @@ watch([sortField, sortOrder], (values) => {
     </Column>
     <Column field="email" header="Email" sortable style="width: 15%">
       <template #body="slotProps">
-        <a :href="'mailto:' + slotProps.data.email">{{ slotProps.data.email }}</a>
+        <a :href="'mailto:' + slotProps.data.email">{{
+          slotProps.data.email
+        }}</a>
       </template>
       <template #filter="{ filterModel, filterCallback }">
         <InputText

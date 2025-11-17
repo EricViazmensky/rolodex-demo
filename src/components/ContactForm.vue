@@ -11,16 +11,19 @@ import {
 import { useContactsStore } from "@/stores/contacts.store";
 import { phoneTypes, getPhoneType } from "@/models/phone.constants";
 
-const props = defineProps<{ contact?: IContactForm }>();
+// define reactive variables needed for the component to work
 const isNewContact = ref(false);
 const contactForm: Ref<IContactForm> = ref<IContactForm>({});
 
 const contactFormRef: Ref<FormInstance | undefined> = ref();
 
-const emits = defineEmits(["submit"]);
-
 const contactStore = useContactsStore();
 
+// define props (inputs) and emits (outputs / user actions) of the component
+const props = defineProps<{ contact?: IContactForm }>();
+const emits = defineEmits(["submit"]);
+
+// define functions needed for the component
 function submitForm() {
   const formFeilds = contactFormRef.value?.states;
   let isValid = true;
@@ -73,6 +76,8 @@ const resolver = (resolveData: FormResolverOptions) => {
   };
 };
 
+
+// define watchers and life cycle hooks of the component
 watch(
   () => props.contact,
   (newContact) => {

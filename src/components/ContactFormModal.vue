@@ -7,7 +7,6 @@ const dialogRef = inject("dialogRef");
 const contactRef: Ref<IContact | undefined> = ref<IContact>();
 
 function handleSubmit(contact: IContactForm) {
-  console.log(contact);
   //@ts-expect-error using primevue dialogref
   dialogRef?.value?.close(contact);
 }
